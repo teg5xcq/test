@@ -13,7 +13,9 @@
           "  =>  " +
           v +
           "  =>  " +
-          new Date().toLocaleDateString()
+          new Date().toLocaleDateString() +
+          " " +
+          new Date().toLocaleTimeString("zh-CN", { hour12: false })
       )
     </script>
   </body>
