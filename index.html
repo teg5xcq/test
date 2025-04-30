@@ -1,28 +1,154 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
-  <body>
-    <script>
-      var v = Math.random() + ""
-      v = v.split(".")[1].split("")
-      var total = 0
-      for (var i = 0; i < v.length; i++) {
-        total += parseInt(v[i])
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>随机数分析</title>
+    <style>
+      body {
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        background-color: #f5f5f5;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        color: #333;
+        line-height: 1.6;
       }
 
-      document.write(
-        (total % 2) +
-          "  =>  " +
-          v +
-          "  =>  " +
-          new Date().toLocaleDateString() +
-          " " +
-          new Date().toLocaleTimeString("zh-CN", { hour12: false })
-      )
+      .container {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        width: 90%;
+        max-width: 500px;
+        text-align: center;
+      }
+
+      h1 {
+        color: #2c3e50;
+        margin-top: 0;
+        font-size: 24px;
+      }
+
+      .result-box {
+        margin: 20px 0;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #3498db;
+      }
+
+      .result-value {
+        font-size: 28px;
+        font-weight: bold;
+        color: #e74c3c;
+        margin: 10px 0;
+      }
+
+      .digits {
+        font-family: monospace;
+        font-size: 18px;
+        word-break: break-all;
+        background-color: #2c3e50;
+        color: #ecf0f1;
+        padding: 10px;
+        border-radius: 6px;
+        margin: 10px 0;
+      }
+
+      .timestamp {
+        color: #7f8c8d;
+        font-size: 14px;
+      }
+
+      .instructions {
+        margin-top: 20px;
+        font-size: 14px;
+        color: #7f8c8d;
+      }
+
+      @media (max-width: 480px) {
+        .container {
+          padding: 20px;
+          width: 95%;
+        }
+
+        h1 {
+          font-size: 20px;
+        }
+
+        .result-value {
+          font-size: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>随机数分析器</h1>
+      <div class="result-box">
+        <div>数字和取模结果:</div>
+        <div class="result-value" id="result"></div>
+        <div>随机数字序列:</div>
+        <div class="digits" id="digits"></div>
+        <div class="timestamp" id="timestamp"></div>
+      </div>
+      <div class="instructions">点击屏幕任意位置重新生成</div>
+    </div>
+
+    <script>
+      function run() {
+        // 生成随机数并处理
+        var v = Math.random() + ""
+        v = v.split(".")[1].split("")
+        var total = 0
+        for (var i = 0; i < v.length; i++) {
+          total += parseInt(v[i])
+        }
+
+        // 计算结果
+        var modResult = total % 2
+        var resultText = modResult === 0 ? "偶数 (0)" : "奇数 (1)"
+        var resultColor = modResult === 0 ? "#2ecc71" : "#e74c3c"
+
+        // 更新显示
+        document.getElementById("result").textContent = resultText
+        document.getElementById("result").style.color = resultColor
+        document.getElementById("digits").textContent = v.join(" ")
+
+        // 格式化时间
+        var now = new Date()
+        var dateStr = now.toLocaleDateString()
+        var timeStr = now.toLocaleTimeString("zh-CN", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+        document.getElementById("timestamp").textContent =
+          "生成时间: " + dateStr + " " + timeStr
+      }
+
+      // 初始运行
+      run()
+
+      // 点击事件监听
+      document.addEventListener("click", function () {
+        // 添加点击反馈动画
+        document.body.style.opacity = 0.7
+        setTimeout(function () {
+          document.body.style.opacity = 1
+          run()
+        }, 200)
+      })
     </script>
   </body>
 </html>
