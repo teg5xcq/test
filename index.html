@@ -7,9 +7,15 @@
   </head>
   <body>
     <script>
-      const v = Math.random()
+      var v = Math.random() + ""
+      v = v.split(".")[1].split("")
+      var total = 0
+      for (var i = 0; i < v.length; i++) {
+        total += parseInt(v[i])
+      }
+
       document.write(
-        Math.round(v) +
+        (total % 2) +
           "  =>  " +
           v +
           "  =>  " +
