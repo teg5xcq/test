@@ -112,7 +112,11 @@
         v = v + k
 
         v = String(v).split("")
-        var total = 0
+
+        var timestamp = new Date().getTime()
+        var timestampLast = timestamp.toString().split("").pop()
+
+        var total = +timestampLast
         for (var i = 0; i < v.length; i++) {
           total += parseInt(v[i])
         }
@@ -126,7 +130,8 @@
         // 更新显示
         document.getElementById("result").textContent = resultText
         document.getElementById("result").style.color = resultColor
-        document.getElementById("digits").textContent = v.join(" ")
+        document.getElementById("digits").textContent =
+          v.join(" ") + " + " + timestampLast
 
         // 格式化时间
         var now = new Date()
