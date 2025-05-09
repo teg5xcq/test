@@ -104,7 +104,14 @@
       function run() {
         // 生成随机数并处理
         var v = Math.random() + ""
-        v = v.split(".")[1].split("")
+        v = parseInt(v.split(".")[1])
+
+        var k = Math.random() + ""
+        k = parseInt(k.split(".")[1])
+
+        v = v + k
+
+        v = String(v).split("")
         var total = 0
         for (var i = 0; i < v.length; i++) {
           total += parseInt(v[i])
@@ -112,7 +119,8 @@
 
         // 计算结果
         var modResult = total % 2
-        var resultText = modResult === 0 ? "双 (0)" : "单 (1)"
+        var resultText = modResult === 0 ? "双" : "单"
+        resultText += `（${Math.round(Math.random() * 10) + 5}）`
         var resultColor = modResult === 0 ? "#2ecc71" : "#e74c3c"
 
         // 更新显示
