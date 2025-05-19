@@ -6,157 +6,471 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>随机数分析</title>
+    <title>币安合约仓位查询</title>
     <style>
-      body {
-        font-family: "Helvetica Neue", Arial, sans-serif;
-        background-color: #f5f5f5;
+      :root {
+        --primary-color: #f0b90b;
+        --bg-color: #12161c;
+        --card-bg: #1e2329;
+        --text-color: #e6e8ea;
+        --border-color: #2e3339;
+        --success-color: #f6465d;
+        --danger-color: #02c076;
+      }
+
+      * {
         margin: 0;
-        padding: 20px;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+      }
+
+      body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        padding: 1rem;
+        height: 100vh;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        color: #333;
-        line-height: 1.6;
       }
 
       .container {
-        background-color: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        padding: 30px;
-        width: 90%;
-        max-width: 500px;
+        max-width: 100%;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .header {
         text-align: center;
+        margin-bottom: 1.5rem;
+        padding-top: 1rem;
       }
 
-      h1 {
-        color: #2c3e50;
-        margin-top: 0;
-        font-size: 24px;
+      .header h1 {
+        color: var(--primary-color);
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
       }
 
-      .result-box {
-        margin: 20px 0;
-        padding: 15px;
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        border-left: 4px solid #3498db;
+      .card {
+        background-color: var(--card-bg);
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border-color);
       }
 
-      .result-value {
-        font-size: 28px;
-        font-weight: bold;
-        color: #e74c3c;
-        margin: 10px 0;
+      .form-group {
+        margin-bottom: 1rem;
       }
 
-      .digits {
-        font-family: monospace;
-        font-size: 18px;
-        word-break: break-all;
-        background-color: #2c3e50;
-        color: #ecf0f1;
-        padding: 10px;
-        border-radius: 6px;
-        margin: 10px 0;
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        font-size: 0.9rem;
       }
 
-      .timestamp {
-        color: #7f8c8d;
-        font-size: 14px;
+      .input-group {
+        position: relative;
       }
 
-      .instructions {
-        margin-top: 20px;
-        font-size: 14px;
-        color: #7f8c8d;
+      .input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        background-color: #2b3139;
+        color: var(--text-color);
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        outline: none;
+        transition: border-color 0.2s;
       }
 
-      @media (max-width: 480px) {
-        .container {
-          padding: 20px;
-          width: 95%;
+      .input:focus {
+        border-color: var(--primary-color);
+      }
+
+      .btn {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: var(--primary-color);
+        color: #000;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .positions-container {
+        overflow-y: auto;
+        flex: 1;
+      }
+
+      .position-card {
+        background-color: var(--card-bg);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color);
+      }
+
+      .position-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .symbol {
+        font-weight: 600;
+        font-size: 1rem;
+      }
+
+      .direction {
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
+      .long {
+        background-color: rgba(2, 192, 118, 0.15);
+        color: var(--success-color);
+      }
+
+      .short {
+        background-color: rgba(246, 70, 93, 0.15);
+        color: var(--danger-color);
+      }
+
+      .position-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+      }
+
+      .detail-item {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .detail-label {
+        font-size: 0.8rem;
+        color: #848e9c;
+        margin-bottom: 0.25rem;
+      }
+
+      .detail-value {
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      .positive {
+        color: var(--success-color);
+      }
+
+      .negative {
+        color: var(--danger-color);
+      }
+
+      .loading {
+        text-align: center;
+        padding: 2rem 0;
+        color: #848e9c;
+      }
+
+      .error {
+        background-color: rgba(246, 70, 93, 0.1);
+        color: var(--danger-color);
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+      }
+
+      .loader {
+        border: 3px solid #2b3139;
+        border-radius: 50%;
+        border-top: 3px solid var(--primary-color);
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
-
-        h1 {
-          font-size: 20px;
+        100% {
+          transform: rotate(360deg);
         }
+      }
 
-        .result-value {
-          font-size: 24px;
-        }
+      .empty-state {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: #848e9c;
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <div class="result-box">
-        <div class="result-value" id="result"></div>
-        <div class="digits" id="digits"></div>
-        <div class="timestamp" id="timestamp"></div>
+      <div class="header">
+        <h1>币安合约仓位查询</h1>
+        <p>安全查询您的合约仓位信息</p>
       </div>
+
+      <div class="card">
+        <div class="form-group">
+          <label for="apiKey">API Key</label>
+          <div class="input-group">
+            <input
+              type="text"
+              id="apiKey"
+              class="input"
+              placeholder="输入您的API Key"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="secretKey">Secret Key</label>
+          <div class="input-group">
+            <input
+              type="password"
+              id="secretKey"
+              class="input"
+              placeholder="输入您的Secret Key"
+            />
+          </div>
+        </div>
+
+        <button id="queryBtn" class="btn">查询仓位</button>
+      </div>
+
+      <div id="errorContainer" class="error" style="display: none"></div>
+
+      <div id="loadingContainer" class="loading" style="display: none">
+        <div class="loader"></div>
+        <p>正在获取仓位数据...</p>
+      </div>
+
+      <div id="positionsContainer" class="positions-container"></div>
     </div>
 
     <script>
-      function run() {
-        // 生成随机数并处理
-        var v = Math.random() + ""
-        v = parseInt(v.split(".")[1])
+      document.addEventListener("DOMContentLoaded", function () {
+        const apiKeyInput = document.getElementById("apiKey")
+        const secretKeyInput = document.getElementById("secretKey")
+        const queryBtn = document.getElementById("queryBtn")
+        const errorContainer = document.getElementById("errorContainer")
+        const loadingContainer = document.getElementById("loadingContainer")
+        const positionsContainer = document.getElementById("positionsContainer")
 
-        var k = Math.random() + ""
-        k = parseInt(k.split(".")[1])
-
-        v = v + k
-
-        v = String(v).split("")
-
-        var timestamp = new Date().getTime()
-        var timestampLast = timestamp.toString().split("").pop()
-
-        var total = +timestampLast
-        for (var i = 0; i < v.length; i++) {
-          total += parseInt(v[i])
+        // 从本地存储中加载API密钥
+        if (localStorage.getItem("binanceApiKey")) {
+          apiKeyInput.value = localStorage.getItem("binanceApiKey")
         }
 
-        // 计算结果
-        var modResult = total % 2
-        var resultText = modResult === 0 ? "双" : "单"
-        resultText += `（${Math.round(Math.random() * 8) + 2}）`
-        var resultColor = modResult === 0 ? "#2ecc71" : "#e74c3c"
+        if (localStorage.getItem("binanceSecretKey")) {
+          secretKeyInput.value = localStorage.getItem("binanceSecretKey")
+        }
 
-        // 更新显示
-        document.getElementById("result").textContent = resultText
-        document.getElementById("result").style.color = resultColor
-        document.getElementById("digits").textContent =
-          v.join(" ") + " + " + timestampLast
+        queryBtn.addEventListener("click", async function () {
+          const apiKey = apiKeyInput.value.trim()
+          const secretKey = secretKeyInput.value.trim()
 
-        // 格式化时间
-        var now = new Date()
-        var dateStr = now.toLocaleDateString()
-        var timeStr = now.toLocaleTimeString("zh-CN", {
-          hour12: false,
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
+          if (!apiKey || !secretKey) {
+            showError("请输入API Key和Secret Key")
+            return
+          }
+
+          // 保存API密钥到本地存储
+          localStorage.setItem("binanceApiKey", apiKey)
+          localStorage.setItem("binanceSecretKey", secretKey)
+
+          // 显示加载状态
+          errorContainer.style.display = "none"
+          positionsContainer.innerHTML = ""
+          loadingContainer.style.display = "block"
+          queryBtn.disabled = true
+
+          try {
+            const positions = await getPositionRisk(apiKey, secretKey)
+            displayPositions(positions)
+          } catch (error) {
+            showError(`获取数据失败: ${error.message}`)
+          } finally {
+            loadingContainer.style.display = "none"
+            queryBtn.disabled = false
+          }
         })
-        document.getElementById("timestamp").textContent =
-          "生成时间: " + dateStr + " " + timeStr
-      }
 
-      // 初始运行
-      run()
+        // 获取仓位风险数据
+        async function getPositionRisk(apiKey, secretKey) {
+          const baseUrl = "https://fapi.binance.com"
+          const endpoint = "/fapi/v2/positionRisk"
 
-      // 点击事件监听
-      document.addEventListener("click", function () {
-        // 添加点击反馈动画
-        document.body.style.opacity = 0.7
-        setTimeout(function () {
-          document.body.style.opacity = 1
-          run()
-        }, 200)
+          // 先获取服务器时间
+          const timeResponse = await fetch(
+            "https://fapi.binance.com/fapi/v1/time"
+          )
+          const timeData = await timeResponse.json()
+          const serverTime = timeData.serverTime
+
+          // 使用服务器时间并添加recvWindow参数(值设为5000毫秒)
+          const queryString = `timestamp=${serverTime}&recvWindow=5000`
+
+          // 创建签名
+          const signature = await createSignature(queryString, secretKey)
+
+          // 构建完整URL
+          const url = `${baseUrl}${endpoint}?${queryString}&signature=${signature}`
+
+          // 发送请求
+          const response = await fetch(url, {
+            method: "GET",
+            headers: {
+              "X-MBX-APIKEY": apiKey,
+            },
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.msg || "请求失败")
+          }
+
+          return await response.json()
+        }
+
+        // 创建签名
+        async function createSignature(queryString, secretKey) {
+          // 使用SubtleCrypto API创建HMAC签名
+          const encoder = new TextEncoder()
+          const keyData = encoder.encode(secretKey)
+          const messageData = encoder.encode(queryString)
+
+          const key = await crypto.subtle.importKey(
+            "raw",
+            keyData,
+            { name: "HMAC", hash: { name: "SHA-256" } },
+            false,
+            ["sign"]
+          )
+
+          const signature = await crypto.subtle.sign("HMAC", key, messageData)
+
+          // 转换为十六进制字符串
+          return Array.from(new Uint8Array(signature))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("")
+        }
+
+        // 显示错误信息
+        function showError(message) {
+          errorContainer.textContent = message
+          errorContainer.style.display = "block"
+          loadingContainer.style.display = "none"
+        }
+
+        // 显示仓位数据
+        function displayPositions(positions) {
+          positionsContainer.innerHTML = ""
+
+          // 过滤有效仓位（持仓数量不为0）
+          const activePositions = positions.filter(
+            (p) => parseFloat(p.positionAmt) !== 0
+          )
+
+          console.log(activePositions)
+
+          if (activePositions.length === 0) {
+            positionsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <p>您当前没有活跃的合约仓位</p>
+                        </div>
+                    `
+            return
+          }
+
+          activePositions.forEach((position) => {
+            const posAmt = parseFloat(position.positionAmt)
+            const isLong = posAmt > 0
+            const unrealizedProfit = parseFloat(position.unRealizedProfit)
+
+            const positionCard = document.createElement("div")
+            positionCard.className = "position-card"
+            positionCard.innerHTML = `
+                        <div class="position-header">
+                            <div class="symbol">${position.symbol}</div>
+                            <div class="direction ${
+                              isLong ? "long" : "short"
+                            }">${isLong ? "多" : "空"}</div>
+                        </div>
+                        <div class="position-details">
+                            <div class="detail-item">
+                                <span class="detail-label">持仓数量</span>
+                                <span class="detail-value">${Math.abs(
+                                  posAmt
+                                )}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">杠杆倍数</span>
+                                <span class="detail-value">${
+                                  position.leverage
+                                }x</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">开仓价格</span>
+                                <span class="detail-value">${parseFloat(
+                                  position.entryPrice
+                                ).toFixed(4)}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">标记价格</span>
+                                <span class="detail-value">${parseFloat(
+                                  position.markPrice
+                                ).toFixed(4)}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">未实现盈亏</span>
+                                <span class="detail-value ${
+                                  unrealizedProfit > 0
+                                    ? "positive"
+                                    : unrealizedProfit < 0
+                                    ? "negative"
+                                    : ""
+                                }">
+                                    ${
+                                      unrealizedProfit > 0 ? "+" : ""
+                                    }${unrealizedProfit.toFixed(4)} USDT
+                                </span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">强平价格</span>
+                                <span class="detail-value">${parseFloat(
+                                  position.liquidationPrice
+                                ).toFixed(4)}</span>
+                            </div>
+                        </div>
+                    `
+
+            positionsContainer.appendChild(positionCard)
+          })
+        }
       })
     </script>
   </body>
