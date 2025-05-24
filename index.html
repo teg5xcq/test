@@ -421,6 +421,23 @@
           }
         })
 
+        // 添加点击事件监听器，点击屏幕任意位置触发加载
+        document.addEventListener("click", function (event) {
+          // 排除点击按钮和输入框的情况，避免重复触发
+          if (
+            event.target.id === "queryBtn" ||
+            event.target.id === "apiKey" ||
+            event.target.id === "secretKey"
+          ) {
+            return
+          }
+
+          // 如果有API密钥，执行查询
+          if (apiKeyInput.value && secretKeyInput.value) {
+            performQuery()
+          }
+        })
+
         // 为查询按钮添加事件监听器
         queryBtn.addEventListener("click", performQuery)
 
