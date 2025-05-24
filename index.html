@@ -304,8 +304,6 @@
             />
           </div>
         </div>
-
-        <button id="queryBtn" class="btn">查询仓位</button>
       </div>
 
       <!-- 修改后的价格和时间显示卡片 -->
@@ -336,7 +334,6 @@
       document.addEventListener("DOMContentLoaded", function () {
         const apiKeyInput = document.getElementById("apiKey")
         const secretKeyInput = document.getElementById("secretKey")
-        const queryBtn = document.getElementById("queryBtn")
         const errorContainer = document.getElementById("errorContainer")
         const loadingContainer = document.getElementById("loadingContainer")
         const positionsContainer = document.getElementById("positionsContainer")
@@ -389,7 +386,6 @@
           positionsContainer.innerHTML = ""
           btcPriceCard.style.display = "none"
           loadingContainer.style.display = "block"
-          queryBtn.disabled = true
 
           try {
             // 并行获取仓位数据和BTCUSDC价格
@@ -410,7 +406,6 @@
             showError(`获取数据失败: ${error.message}`)
           } finally {
             loadingContainer.style.display = "none"
-            queryBtn.disabled = false
           }
         }
 
@@ -427,11 +422,7 @@
         // 添加点击事件监听器，点击屏幕任意位置触发加载
         document.addEventListener("click", function (event) {
           // 排除点击按钮和输入框的情况，避免重复触发
-          if (
-            event.target.id === "queryBtn" ||
-            event.target.id === "apiKey" ||
-            event.target.id === "secretKey"
-          ) {
+          if (event.target.id === "apiKey" || event.target.id === "secretKey") {
             return
           }
 
@@ -440,9 +431,6 @@
             performQuery()
           }
         })
-
-        // 为查询按钮添加事件监听器
-        queryBtn.addEventListener("click", performQuery)
 
         // 页面首次加载时，如果已有API密钥，也执行一次查询
         if (apiKeyInput.value && secretKeyInput.value) {
