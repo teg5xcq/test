@@ -6,6 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
+    <meta name="format-detection" content="telephone=no" />
     <title>币安合约仓位查询</title>
     <style>
       :root {
@@ -135,7 +136,7 @@
 
       .symbol {
         font-weight: 600;
-        font-size: 1rem;
+        font-size: 1.2rem;
       }
 
       .direction {
@@ -224,6 +225,18 @@
         padding: 2rem 1rem;
         color: #848e9c;
       }
+
+      .price-display {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .price-value {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--primary-color);
+      }
     </style>
   </head>
   <body>
@@ -256,6 +269,19 @@
         <button id="queryBtn" class="btn">查询仓位</button>
       </div>
 
+      <!-- 修改后的价格和时间显示卡片 -->
+      <div id="btcPriceCard" class="card" style="display: none">
+        <div class="price-display">
+          <div style="display: flex; align-items: center; gap: 4px">
+            <span class="symbol">BTCUSDC 标记价格</span>
+            <span id="btcMarkPrice" class="price-value">--</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px">
+            <span id="queryTime" class="price-value">--</span>
+          </div>
+        </div>
+      </div>
+
       <div id="errorContainer" class="error" style="display: none"></div>
 
       <div id="loadingContainer" class="loading" style="display: none">
@@ -274,6 +300,9 @@
         const errorContainer = document.getElementById("errorContainer")
         const loadingContainer = document.getElementById("loadingContainer")
         const positionsContainer = document.getElementById("positionsContainer")
+        const btcPriceCard = document.getElementById("btcPriceCard")
+        const btcMarkPrice = document.getElementById("btcMarkPrice")
+        const queryTime = document.getElementById("queryTime")
 
         // 从本地存储中加载API密钥
         if (localStorage.getItem("binanceApiKey")) {
@@ -284,7 +313,25 @@
           secretKeyInput.value = localStorage.getItem("binanceSecretKey")
         }
 
-        queryBtn.addEventListener("click", async function () {
+        // 更新查询时间
+        function updateQueryTime() {
+          const now = new Date()
+          const formattedDate = now.toLocaleDateString("zh-CN", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          })
+          const formattedTime = now.toLocaleTimeString("zh-CN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
+          })
+          queryTime.textContent = `${formattedDate} ${formattedTime}`
+        }
+
+        // 执行查询
+        async function performQuery() {
           const apiKey = apiKeyInput.value.trim()
           const secretKey = secretKeyInput.value.trim()
 
@@ -300,11 +347,24 @@
           // 显示加载状态
           errorContainer.style.display = "none"
           positionsContainer.innerHTML = ""
+          btcPriceCard.style.display = "none"
           loadingContainer.style.display = "block"
           queryBtn.disabled = true
 
           try {
-            const positions = await getPositionRisk(apiKey, secretKey)
+            // 并行获取仓位数据和BTCUSDC价格
+            const [positions, btcPrice] = await Promise.all([
+              getPositionRisk(apiKey, secretKey),
+              getBtcMarkPrice(),
+            ])
+
+            // 显示BTCUSDC价格
+            displayBtcPrice(btcPrice)
+
+            // 更新查询时间
+            updateQueryTime()
+
+            // 显示仓位数据
             displayPositions(positions)
           } catch (error) {
             showError(`获取数据失败: ${error.message}`)
@@ -312,7 +372,56 @@
             loadingContainer.style.display = "none"
             queryBtn.disabled = false
           }
+        }
+
+        // 添加可见性变化事件监听器，当页面变为可见时刷新数据
+        document.addEventListener("visibilitychange", function () {
+          if (document.visibilityState === "visible") {
+            // 当页面变为可见时，如果有API密钥，自动执行查询
+            if (apiKeyInput.value && secretKeyInput.value) {
+              performQuery()
+            }
+          }
         })
+
+        // 为查询按钮添加事件监听器
+        queryBtn.addEventListener("click", performQuery)
+
+        // 页面首次加载时，如果已有API密钥，也执行一次查询
+        if (apiKeyInput.value && secretKeyInput.value) {
+          performQuery()
+        }
+
+        // 获取BTCUSDC标记价格
+        async function getBtcMarkPrice() {
+          try {
+            const response = await fetch(
+              "https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDC"
+            )
+
+            if (!response.ok) {
+              const errorData = await response.json()
+              throw new Error(errorData.msg || "获取BTCUSDC价格失败")
+            }
+
+            return await response.json()
+          } catch (error) {
+            console.error("获取BTCUSDC价格出错:", error)
+            throw error
+          }
+        }
+
+        // 显示BTCUSDC价格
+        function displayBtcPrice(priceData) {
+          if (priceData && priceData.markPrice) {
+            btcMarkPrice.textContent =
+              parseFloat(priceData.markPrice).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }) + " USDC"
+            btcPriceCard.style.display = "block"
+          }
+        }
 
         // 获取仓位风险数据
         async function getPositionRisk(apiKey, secretKey) {
