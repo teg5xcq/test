@@ -539,6 +539,18 @@
           loadingContainer.style.display = "none"
         }
 
+        // 计算平仓手续费
+        function calculateClosingFee(position) {
+          const positionSize = Math.abs(parseFloat(position.positionAmt))
+          const markPrice = parseFloat(position.markPrice)
+          const notionalValue = positionSize * markPrice
+
+          // 币安期货Taker手续费率 0.04%
+          const feeRate = 0.0004
+
+          return notionalValue * feeRate
+        }
+
         // 显示仓位数据
         function displayPositions(positions) {
           positionsContainer.innerHTML = ""
@@ -613,10 +625,42 @@
                                 </span>
                             </div>
                             <div class="detail-item">
+                                <span class="detail-label">平仓手续费</span>
+                                <span class="detail-value negative">
+                                    ${calculateClosingFee(position).toFixed(
+                                      4
+                                    )} USDT
+                                </span>
+                            </div>
+                            <div class="detail-item">
                                 <span class="detail-label">强平价格</span>
                                 <span class="detail-value">${parseFloat(
                                   position.liquidationPrice
                                 ).toFixed(4)}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">净盈亏</span>
+                                <span class="detail-value ${
+                                  unrealizedProfit -
+                                    calculateClosingFee(position) >
+                                  0
+                                    ? "positive"
+                                    : unrealizedProfit -
+                                        calculateClosingFee(position) <
+                                      0
+                                    ? "negative"
+                                    : ""
+                                }">
+                                    ${
+                                      unrealizedProfit -
+                                        calculateClosingFee(position) >
+                                      0
+                                        ? "+"
+                                        : ""
+                                    }${(
+              unrealizedProfit - calculateClosingFee(position)
+            ).toFixed(4)} USDT
+                                </span>
                             </div>
                         </div>
                     `
