@@ -235,6 +235,13 @@
         justify-content: space-between;
       }
 
+      .prices-row {
+        display: flex;
+        justify-content: flex-start;
+        gap: 16px;
+        margin-bottom: 8px;
+      }
+
       .price-value {
         font-size: 1.2rem;
         font-weight: 600;
@@ -246,6 +253,10 @@
           flex-direction: column;
           align-items: flex-start;
           gap: 8px;
+        }
+
+        .prices-row {
+          flex-wrap: wrap;
         }
 
         .symbol {
@@ -277,11 +288,17 @@
   <body>
     <div class="container">
       <!-- 修改后的价格和时间显示卡片 -->
-      <div id="btcPriceCard" class="card" style="display: none">
+      <div id="priceCard" class="card" style="display: none">
         <div class="price-display">
-          <div style="display: flex; align-items: center; gap: 4px">
-            <span class="symbol">BTCUSDC</span>
-            <span id="btcMarkPrice" class="price-value">--</span>
+          <div class="prices-row">
+            <div style="display: flex; align-items: center; gap: 4px">
+              <span class="symbol">BTCUSDC</span>
+              <span id="btcMarkPrice" class="price-value">--</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 4px">
+              <span class="symbol">ETHUSDC</span>
+              <span id="ethMarkPrice" class="price-value">--</span>
+            </div>
           </div>
           <div style="display: flex; align-items: center; gap: 4px">
             <span class="symbol">查询时间</span>
@@ -333,8 +350,9 @@
         const errorContainer = document.getElementById("errorContainer")
         const loadingContainer = document.getElementById("loadingContainer")
         const positionsContainer = document.getElementById("positionsContainer")
-        const btcPriceCard = document.getElementById("btcPriceCard")
+        const priceCard = document.getElementById("priceCard")
         const btcMarkPrice = document.getElementById("btcMarkPrice")
+        const ethMarkPrice = document.getElementById("ethMarkPrice")
         const queryTime = document.getElementById("queryTime")
 
         // 从本地存储中加载API密钥
@@ -387,18 +405,19 @@
           // 显示加载状态
           errorContainer.style.display = "none"
           positionsContainer.innerHTML = ""
-          btcPriceCard.style.display = "none"
+          priceCard.style.display = "none"
           loadingContainer.style.display = "block"
 
           try {
-            // 并行获取仓位数据和BTCUSDC价格
-            const [positions, btcPrice] = await Promise.all([
+            // 并行获取仓位数据、BTCUSDC价格和ETHUSDC价格
+            const [positions, btcPrice, ethPrice] = await Promise.all([
               getPositionRisk(apiKey, secretKey),
-              getBtcMarkPrice(),
+              getCryptoMarkPrice("BTCUSDC"),
+              getCryptoMarkPrice("ETHUSDC"),
             ])
 
-            // 显示BTCUSDC价格
-            displayBtcPrice(btcPrice)
+            // 显示加密货币价格
+            displayCryptoPrices(btcPrice, ethPrice)
 
             // 更新查询时间
             updateQueryTime()
@@ -440,36 +459,46 @@
           performQuery()
         }
 
-        // 获取BTCUSDC标记价格
-        async function getBtcMarkPrice() {
+        // 获取加密货币标记价格
+        async function getCryptoMarkPrice(symbol) {
           try {
             const response = await fetch(
-              "https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDC"
+              `https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${symbol}`
             )
 
             if (!response.ok) {
               const errorData = await response.json()
-              throw new Error(errorData.msg || "获取BTCUSDC价格失败")
+              throw new Error(errorData.msg || `获取${symbol}价格失败`)
             }
 
             return await response.json()
           } catch (error) {
-            console.error("获取BTCUSDC价格出错:", error)
+            console.error(`获取${symbol}价格出错:`, error)
             throw error
           }
         }
 
-        // 显示BTCUSDC价格
-        function displayBtcPrice(priceData) {
-          if (priceData && priceData.markPrice) {
+        // 显示加密货币价格
+        function displayCryptoPrices(btcPriceData, ethPriceData) {
+          if (btcPriceData && btcPriceData.markPrice) {
             btcMarkPrice.textContent = parseFloat(
-              priceData.markPrice
+              btcPriceData.markPrice
             ).toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })
-            btcPriceCard.style.display = "block"
           }
+
+          if (ethPriceData && ethPriceData.markPrice) {
+            ethMarkPrice.textContent = parseFloat(
+              ethPriceData.markPrice
+            ).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+          }
+
+          priceCard.style.display = "block"
         }
 
         // 获取仓位风险数据
